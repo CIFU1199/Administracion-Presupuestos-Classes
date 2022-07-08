@@ -19,7 +19,16 @@ class Presupuesto{
     }
     nuevoGasto(gasto){
         this.gastos = [...this.gastos, gasto];
-        console.log(this.gastos);
+        this.calcularRestante();
+    }
+    calcularRestante(){
+        const gastado = this.gastos.reduce( (total , gasto) => total + gasto.cantidad, 0);
+        this.restante = this.presupuesto - gastado;
+    }
+
+    eliminarGasto(id){
+        this.gastos = this.gastos.filter( gasto => gasto.id !== id);
+        this.calcularRestante();
     }
 
 }
@@ -71,12 +80,16 @@ class UI{
             
 
             //agregar el html del gasto 
-            nuevoGasto.innerHTML = `${nombre} <span class="badge badge-primary badge-pill"> ${cantidad}</span>`;
+            nuevoGasto.innerHTML = `${nombre} <span class="badge badge-primary badge-pill">$ ${cantidad}</span>`;
             
             // boton para borrar el gasto  
             const btnBorrar = document.createElement('button');
             btnBorrar.classList.add('btn', 'btn-danger','borrar-gasto');
             btnBorrar.innerHTML = 'Borrar &times;'
+            btnBorrar.onclick = () =>{
+                eliminarGasto(id);
+            }
+
             nuevoGasto.appendChild(btnBorrar);
 
             //agregar al html 
@@ -84,11 +97,40 @@ class UI{
             gastoListado.appendChild(nuevoGasto);
 
         });
+
+
     }
 
     limpiarHTML(){
         while (gastoListado.firstChild) {
             gastoListado.removeChild(gastoListado.firstChild);
+        }
+    }
+
+    actualizarRestante(restante){
+        document.querySelector('#restante').textContent = restante;
+    }
+
+    coprobarPresupuesto(presupuestoObj){
+        const {presupuesto , restante}= presupuestoObj;
+        const restanteDiv = document.querySelector('.restante');
+
+        //Comprobar 25%
+        if((presupuesto/4)> restante){
+            restanteDiv.classList.remove('alert-success','alert-warning');
+            restanteDiv.classList.add('alert-danger');
+        }else if ((presupuesto/2)> restante){
+            restanteDiv.classList.remove('alert-success');
+            restanteDiv.classList.add('alert-warning');
+        }else{
+            restanteDiv.classList.remove('alert-danger', 'alert-warning');
+            restanteDiv.classList.add('alert-success');
+        }
+        // si el total es 0 o menor
+
+        if (restante <= 0){
+            ui.imprimirAlerta('el presupuesto se ha agotado', 'error');
+            formulario.querySelector('button[type="submit"]').disabled = true;
         }
     }
 }
@@ -110,7 +152,7 @@ function preguntarPresupuesto(){
 
     //Presupuesto valido 
     presupuesto = new Presupuesto(presupuestoUser);
-    console.log(presupuesto);
+    
 
     ui.insertarPresupuesto(presupuesto);
 }
@@ -142,10 +184,27 @@ function agregarGasto(e){
     ui.imprimirAlerta('Gasto agregado Correctamente');
 
     //imprimir los gastos 
-    const {gastos} = presupuesto;
+    const {gastos, restante} = presupuesto;
     ui.agregarGastoListado(gastos);
 
+    ui.actualizarRestante(restante);
+
+    ui.coprobarPresupuesto(presupuesto);
+
+    
     //reinicia el formulario
     formulario.reset();
+
+}
+
+function eliminarGasto(id){
+    //elimina de la cas
+    presupuesto.eliminarGasto(id);
+
+    //elimina los gastos del html 
+    const {gastos , restante} = presupuesto;
+    ui.agregarGastoListado(gastos);
+    ui.actualizarRestante(restante);
+    ui.coprobarPresupuesto(presupuesto);
 
 }
