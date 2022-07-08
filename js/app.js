@@ -1,13 +1,13 @@
 // Variables y selectorea 
 const formulario = document.querySelector('#agregar-gasto');
-
-const gastoListado = document.querySelector('gastos ul');
+const gastoListado = document.querySelector('#gastos ul');
 
 // eventos
 eventListeners();
 function eventListeners(){
     document.addEventListener('DOMContentLoaded', preguntarPresupuesto);
     formulario.addEventListener('submit',agregarGasto);
+    
 }
 
 //classes
@@ -54,6 +54,42 @@ class UI{
         setTimeout(() => {
             divMensaje.remove();
         }, 3000);
+    }
+
+    agregarGastoListado(gastos){
+        this.limpiarHTML();//elimina el html previo 
+
+        //iterar sobre los gastos 
+        gastos.forEach(gasto => {
+            
+            const {cantidad , nombre ,id} =gasto;
+
+            //Crear un li
+            const nuevoGasto = document.createElement('li');
+            nuevoGasto.className='list-group-item d-flex justify-content-between align-items-center';
+            nuevoGasto.dataset.id = id;
+            
+
+            //agregar el html del gasto 
+            nuevoGasto.innerHTML = `${nombre} <span class="badge badge-primary badge-pill"> ${cantidad}</span>`;
+            
+            // boton para borrar el gasto  
+            const btnBorrar = document.createElement('button');
+            btnBorrar.classList.add('btn', 'btn-danger','borrar-gasto');
+            btnBorrar.innerHTML = 'Borrar &times;'
+            nuevoGasto.appendChild(btnBorrar);
+
+            //agregar al html 
+
+            gastoListado.appendChild(nuevoGasto);
+
+        });
+    }
+
+    limpiarHTML(){
+        while (gastoListado.firstChild) {
+            gastoListado.removeChild(gastoListado.firstChild);
+        }
     }
 }
 //Instanciar 
@@ -104,6 +140,10 @@ function agregarGasto(e){
 
     // Mensaje de todo bien 
     ui.imprimirAlerta('Gasto agregado Correctamente');
+
+    //imprimir los gastos 
+    const {gastos} = presupuesto;
+    ui.agregarGastoListado(gastos);
 
     //reinicia el formulario
     formulario.reset();
